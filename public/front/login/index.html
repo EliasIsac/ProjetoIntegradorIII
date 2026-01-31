@@ -1,0 +1,227 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+  <meta charset="UTF-8">
+  <title>Login</title>
+  <link rel="stylesheet" href="/front/login/login.css">
+  <style>
+    .hidden { display: none; }
+    
+    /* Estilos para o autocomplete e formulário */
+    .form-group { position: relative; margin-bottom: 15px; }
+    .form-group label { display: block; margin-bottom: 5px; color: #333; }
+    .form-group input { width: 100%; padding: 8px; box-sizing: border-box; }
+    
+    #school-suggestions {
+      position: absolute;
+      background: white;
+      border: 1px solid #ccc;
+      width: 100%;
+      max-height: 150px;
+      overflow-y: auto;
+      z-index: 1000;
+      display: none;
+    }
+    .suggestion-item { padding: 8px; cursor: pointer; color: #333; }
+    .suggestion-item:hover { background-color: #f0f0f0; }
+
+    /* Ajuste para botões lado a lado na lateral azul */
+    .botoes-acao {
+      display: flex;
+      gap: 10px;
+      justify-content: center;
+      margin-top: 10px;
+    }
+    .botoes-acao button {
+      cursor: pointer;
+    }
+  </style>
+</head>
+
+<body>
+
+  <div class="login-container">
+    <div class="formulario-lateral">
+      
+      <!-- Seção de Login -->
+      <div id="login-section">
+        <h2>Login</h2>
+        <form id="login-form">
+          <label>Email:</label>
+          <input type="email" name="email" required><br><br>
+          <label>Senha:</label>
+          <input type="password" name="senha" required><br><br>
+          <button type="submit">Entrar</button>
+        </form>
+      </div>
+
+      <!-- Seção de Cadastro -->
+      <div id="register-section" class="hidden">
+        <h2>Cadastre-se</h2>
+        <form id="registerForm">
+          <div class="form-group">
+            <label>Nome Completo:</label>
+            <input type="text" name="nome" required>
+          </div>
+          
+          <div class="form-group">
+            <label>Escola:</label>
+            <input type="text" id="school_search" placeholder="Busque sua escola..." autocomplete="off" required>
+            <input type="hidden" id="reg_schoolId" name="schoolId" required>
+            <div id="school-suggestions"></div>
+          </div>
+
+          <div class="form-group">
+            <label>Telefone:</label>
+            <input type="text" name="telefone" required>
+          </div>
+
+          <div class="form-group">
+            <label>Email:</label>
+            <input type="email" name="email" required>
+          </div>
+
+          <div class="form-group">
+            <label>Senha:</label>
+            <input type="password" name="senha" required>
+          </div>
+
+          <button type="submit" style="margin-top: 10px;">Confirmar Cadastro</button>
+        </form>
+      </div>
+
+    </div>
+
+    <div class="lateral-azul">
+      <img src="/images/LogodaEmpresa.png" alt="Logo">
+      <p>Sem acesso? Entre em contato com sua equipe ou gestão!</p>
+      <div class="botoes-acao">
+        <button>Solicitar</button>
+        <button type="button" onclick="toggleForms()">Cadastre-se</button>
+      </div>
+    </div>
+
+  </div>
+
+  <!-- Script com a lógica de Login, Cadastro e Autocomplete -->
+  <script>
+    // Alternar entre Login e Cadastro
+    function toggleForms() {
+      const loginSec = document.getElementById('login-section');
+      const registerSec = document.getElementById('register-section');
+      
+      if (loginSec.classList.contains('hidden')) {
+        loginSec.classList.remove('hidden');
+        registerSec.classList.add('hidden');
+      } else {
+        loginSec.classList.add('hidden');
+        registerSec.classList.remove('hidden');
+      }
+    }
+
+    // Lógica de Login
+    document.getElementById('login-form').addEventListener('submit', async (e) => {
+      e.preventDefault();
+      const formData = new URLSearchParams(new FormData(e.target));
+      
+      try {
+        const response = await fetch('/api/auth/login', {
+          method: 'POST',
+          body: formData, // Envia como x-www-form-urlencoded
+        });
+        const data = await response.json();
+        
+        if (response.ok) {
+          localStorage.setItem('token', data.token);
+          alert('Login realizado com sucesso!');
+          // Redirecionar conforme a role
+          if(data.user.role === 'admin') window.location.href = '/admin';
+          else if(data.user.role === 'technician') window.location.href = '/tecnico';
+          else window.location.href = '/meus-chamados'; // Ajuste conforme suas rotas
+        } else {
+          alert('Erro: ' + data.message);
+        }
+      } catch (error) {
+        console.error('Erro:', error);
+        alert('Erro ao conectar com o servidor.');
+      }
+    });
+
+    // Lógica de Busca de Escolas (Autocomplete)
+    const schoolInput = document.getElementById('school_search');
+    const schoolIdInput = document.getElementById('reg_schoolId');
+    const suggestionsBox = document.getElementById('school-suggestions');
+
+    schoolInput.addEventListener('input', async () => {
+      const query = schoolInput.value;
+      if (query.length < 2) {
+        suggestionsBox.style.display = 'none';
+        return;
+      }
+
+      try {
+        const res = await fetch(`/api/schools?search=${encodeURIComponent(query)}`);
+        const schools = await res.json();
+        
+        suggestionsBox.innerHTML = '';
+        if (schools.length > 0) {
+          suggestionsBox.style.display = 'block';
+          schools.forEach(school => {
+            const div = document.createElement('div');
+            div.className = 'suggestion-item';
+            div.textContent = `${school.nome} - ${school.endereco}`;
+            div.onclick = () => {
+              schoolInput.value = school.nome;
+              schoolIdInput.value = school.id;
+              suggestionsBox.style.display = 'none';
+            };
+            suggestionsBox.appendChild(div);
+          });
+        } else {
+          suggestionsBox.style.display = 'none';
+        }
+      } catch (err) {
+        console.error('Erro ao buscar escolas:', err);
+      }
+    });
+
+    // Fechar sugestões ao clicar fora
+    document.addEventListener('click', (e) => {
+      if (e.target !== schoolInput) {
+        suggestionsBox.style.display = 'none';
+      }
+    });
+
+    // Lógica de Cadastro
+    document.getElementById('registerForm').addEventListener('submit', async (e) => {
+      e.preventDefault();
+      const formData = new FormData(e.target);
+      const data = Object.fromEntries(formData.entries());
+      
+      // Define role padrão como client
+      data.role = 'client';
+
+      try {
+        const response = await fetch('/api/auth/register', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify(data)
+        });
+        const result = await response.json();
+
+        if (response.ok) {
+          alert('Cadastro realizado com sucesso! Faça login.');
+          toggleForms(); // Volta para o login
+        } else {
+          alert('Erro no cadastro: ' + result.message);
+        }
+      } catch (error) {
+        console.error('Erro:', error);
+        alert('Erro ao tentar cadastrar.');
+      }
+    });
+  </script>
+
+
+</body>
+</html>

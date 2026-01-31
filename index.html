@@ -1,0 +1,217 @@
+<!-- Declaração do tipo de documento, essencial para que o navegador renderize a página em modo padrão (standard mode). -->
+<!DOCTYPE html>
+<!-- O elemento raiz de uma página HTML. -->
+<html>
+<!-- A tag <head> contém metadados sobre o documento, como o título e a codificação de caracteres. -->
+<head>
+  <!-- Define a codificação de caracteres para o documento como UTF-8, que suporta a maioria dos caracteres e símbolos. -->
+  <meta charset="UTF-8">
+  <!-- Define o título da página, que é exibido na aba ou na barra de título do navegador. -->
+  <title>Login - HelpDeskSphere</title>
+  <style>
+    /* Estilos básicos para layout e autocomplete */
+    body { font-family: sans-serif; padding: 20px; }
+    .container { max-width: 400px; margin: 0 auto; }
+    .hidden { display: none; }
+    
+    .form-group { margin-bottom: 15px; position: relative; }
+    label { display: block; margin-bottom: 5px; }
+    input, select, button { width: 100%; padding: 8px; box-sizing: border-box; }
+    
+    .btn-primary { background-color: #007bff; color: white; border: none; cursor: pointer; margin-top: 10px; }
+    .btn-secondary { background-color: #6c757d; color: white; border: none; cursor: pointer; margin-top: 10px; }
+    
+    .actions { display: flex; gap: 10px; }
+    
+    /* Estilos da lista de sugestões de escola */
+    #school-suggestions {
+      position: absolute;
+      background: white;
+      border: 1px solid #ccc;
+      width: 100%;
+      max-height: 150px;
+      overflow-y: auto;
+      z-index: 1000;
+      display: none;
+    }
+    .suggestion-item { padding: 8px; cursor: pointer; }
+    .suggestion-item:hover { background-color: #f0f0f0; }
+  </style>
+</head>
+<!-- A tag <body> contém todo o conteúdo visível da página web. -->
+<body>
+  <div class="container">
+    
+    <!-- ==================== TELA DE LOGIN ==================== -->
+    <div id="login-section">
+      <h2>Login</h2>
+      <form id="loginForm">
+        <div class="form-group">
+          <label for="email">Email:</label>
+          <input type="email" id="email" name="email" required />
+        </div>
+
+        <div class="form-group">
+          <label for="password">Senha:</label>
+          <input type="password" id="password" name="password" required />
+        </div>
+
+        <div class="actions">
+          <button type="submit" class="btn-primary">Entrar</button>
+          <!-- Botão Cadastre-se ao lado -->
+          <button type="button" class="btn-secondary" onclick="toggleForms()">Cadastre-se</button>
+        </div>
+      </form>
+    </div>
+
+    <!-- ==================== TELA DE CADASTRO ==================== -->
+    <div id="register-section" class="hidden">
+      <h2>Cadastre-se</h2>
+      <form id="registerForm">
+        <div class="form-group">
+          <label for="reg_nome">Nome Completo:</label>
+          <input type="text" id="reg_nome" name="nome" required />
+        </div>
+
+        <div class="form-group">
+          <label for="school_search">Escola (Busque pelo nome):</label>
+          <input type="text" id="school_search" placeholder="Digite para buscar..." autocomplete="off" required />
+          <!-- Campo oculto para armazenar o ID da escola selecionada -->
+          <input type="hidden" id="reg_schoolId" name="schoolId" required />
+          <div id="school-suggestions"></div>
+        </div>
+
+        <div class="form-group">
+          <label for="reg_telefone">Telefone:</label>
+          <input type="text" id="reg_telefone" name="telefone" required />
+        </div>
+
+        <div class="form-group">
+          <label for="reg_email">Email:</label>
+          <input type="email" id="reg_email" name="email" required />
+        </div>
+
+        <div class="form-group">
+          <label for="reg_senha">Senha:</label>
+          <input type="password" id="reg_senha" name="senha" required />
+        </div>
+
+        <div class="actions">
+          <button type="submit" class="btn-primary">Confirmar Cadastro</button>
+          <button type="button" class="btn-secondary" onclick="toggleForms()">Voltar ao Login</button>
+        </div>
+      </form>
+    </div>
+
+  </div>
+
+  <script>
+    // Alternar entre Login e Cadastro
+    function toggleForms() {
+      document.getElementById('login-section').classList.toggle('hidden');
+      document.getElementById('register-section').classList.toggle('hidden');
+    }
+
+    // Lógica de Login
+    document.getElementById('loginForm').addEventListener('submit', async (e) => {
+      e.preventDefault();
+      const formData = new URLSearchParams(new FormData(e.target));
+      
+      try {
+        const response = await fetch('/api/auth/login', {
+          method: 'POST',
+          body: formData,
+        });
+        const data = await response.json();
+        
+        if (response.ok) {
+          localStorage.setItem('token', data.token);
+          alert('Login realizado com sucesso!');
+          // Redirecionamento simples baseado na role
+          if(data.user.role === 'admin') window.location.href = '/admin'; // Ajuste conforme suas rotas
+          else window.location.href = '/dashboard'; 
+        } else {
+          alert('Erro: ' + data.message);
+        }
+      } catch (error) {
+        console.error('Erro:', error);
+        alert('Erro ao conectar com o servidor.');
+      }
+    });
+
+    // Lógica de Busca de Escolas (Autocomplete)
+    const schoolInput = document.getElementById('school_search');
+    const schoolIdInput = document.getElementById('reg_schoolId');
+    const suggestionsBox = document.getElementById('school-suggestions');
+
+    schoolInput.addEventListener('input', async () => {
+      const query = schoolInput.value;
+      if (query.length < 2) {
+        suggestionsBox.style.display = 'none';
+        return;
+      }
+
+      try {
+        const res = await fetch(`/api/schools?search=${encodeURIComponent(query)}`);
+        const schools = await res.json();
+        
+        suggestionsBox.innerHTML = '';
+        if (schools.length > 0) {
+          suggestionsBox.style.display = 'block';
+          schools.forEach(school => {
+            const div = document.createElement('div');
+            div.className = 'suggestion-item';
+            div.textContent = `${school.nome} - ${school.endereco}`;
+            div.onclick = () => {
+              schoolInput.value = school.nome;
+              schoolIdInput.value = school.id;
+              suggestionsBox.style.display = 'none';
+            };
+            suggestionsBox.appendChild(div);
+          });
+        } else {
+          suggestionsBox.style.display = 'none';
+        }
+      } catch (err) {
+        console.error('Erro ao buscar escolas:', err);
+      }
+    });
+
+    // Fechar sugestões ao clicar fora
+    document.addEventListener('click', (e) => {
+      if (e.target !== schoolInput) {
+        suggestionsBox.style.display = 'none';
+      }
+    });
+
+    // Lógica de Cadastro
+    document.getElementById('registerForm').addEventListener('submit', async (e) => {
+      e.preventDefault();
+      const formData = new FormData(e.target);
+      const data = Object.fromEntries(formData.entries());
+      
+      // Define role padrão como client
+      data.role = 'client';
+
+      try {
+        const response = await fetch('/api/auth/register', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify(data)
+        });
+        const result = await response.json();
+
+        if (response.ok) {
+          alert('Cadastro realizado com sucesso! Faça login.');
+          toggleForms(); // Volta para o login
+        } else {
+          alert('Erro no cadastro: ' + result.message);
+        }
+      } catch (error) {
+        console.error('Erro:', error);
+        alert('Erro ao tentar cadastrar.');
+      }
+    });
+  </script>
+</body>
+</html>

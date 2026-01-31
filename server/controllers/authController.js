@@ -1,0 +1,151 @@
+// const usuario é o modelo do Sequelize para a tabela de usuários
+// bcrypt é usado para criptografar senhas
+// jwt é usado para criar tokens de autenticação
+const Usuario = require('../models/Usuario');
+const bcrypt = require('bcryptjs');
+const jwt = require('jsonwebtoken');
+
+// Adicione esta chave secreta para assinar os tokens (crie uma complexa e armazene no .env futuramente)
+
+
+// Lógica de registro de usuário
+//exports.register = async (req, res) é a função que lida com o registro de novos usuários
+// Ela recebe os dados do usuário via req.body, verifica se o email já está em uso,
+// criptografa a senha, cria o usuário no banco de dados e retorna um token JWT
+// para autenticação futura.
+// A função é assíncrona para lidar com operações de banco de dados e criptografia que são baseadas em promessas.
+//req e res são os objetos de solicitação e resposta do Express.js
+// req.body contém os dados enviados pelo cliente (nome, email, senha, role, schoolId)
+exports.register = async (req, res) => {
+    const { nome, email, senha, role, schoolId, telefone } = req.body;
+    // Verifique se a senha está chegando aqui!
+        console.log('Senha recebida:', senha);
+        console.log('Requisição de registro recebida.');
+        console.log('Corpo da requisição (req.body):', req.body);
+        console.log('Valores desestruturados:', { nome, email, senha, role, schoolId, telefone });
+        
+
+    try {
+        // Verifica se o usuário já existe
+       
+        const existingUser = await Usuario.findOne({ where: { email } });
+        if (existingUser) {
+            return res.status(400).json({ message: 'Email já cadastrado.' });
+        }
+
+        if (!senha) {
+            return res.status(400).json({ message: 'A senha é obrigatória.' });
+        }
+
+       
+
+        // Criptografa a senha antes de salvar
+        const salt = await bcrypt.genSalt(10);
+        const hashedPassword = await bcrypt.hash(senha, salt);
+
+        // Cria o novo usuário no banco de dados
+        const newUser = await Usuario.create({
+            nome,
+            email,
+            senha: hashedPassword,
+            role,
+            schoolId,
+            telefone,
+        });
+
+        // Gera um token JWT para o novo usuário
+        const token = jwt.sign({ id: newUser.id, role: newUser.role, schoolId: newUser.schoolId  },
+        process.env.JWT_SECRET || 'segredo123',
+            { expiresIn: '1h' }
+        );      
+
+        // Retorna os detalhes do usuário e o token
+        // 201 indica que o recurso foi criado com sucesso
+        // O token é retornado para que o usuário possa ser autenticado imediatamente após o registro
+        // A senha não é retornada por razões de segurança
+        res.status(201).json({
+            message: 'Usuário registrado com sucesso.',
+            user: {
+                id: newUser.id,
+                nome: newUser.nome,
+                email: newUser.email,
+                role: newUser.role,
+                schoolId: newUser.schoolId,
+                telefone: newUser.telefone,
+            },
+            token,
+        });
+
+    } catch (error) {
+        console.error('Erro no registro do usuário:', error);
+        res.status(500).json({ message: 'Erro no servidor.' });
+    }
+};
+
+// ... (código existente para imports e a função register)
+
+// Lógica de login de usuário
+// exports.login = async (req, res) é a função que lida com o login de usuários existentes
+// Ela recebe o email e a senha via req.body, verifica se o usuário existe,
+// compara a senha fornecida com a senha criptografada no banco de dados,
+// ... (outras funções e imports acima)
+
+// Lógica de login de usuário
+exports.login = async (req, res) => {
+    try {
+        if (!req.body) {
+            return res.status(400).json({ message: 'Corpo da requisição vazio ou formato inválido. Verifique o Content-Type.' });
+        }
+
+        const { email, senha } = req.body;
+
+        console.log('1. Senha recebida do frontend:', senha);
+
+        // 1. Encontra o usuário pelo email, explicitamente incluindo o campo 'senha'
+        const user = await Usuario.findOne({
+            where: { email },
+            attributes: ['id', 'nome', 'email', 'role', 'schoolId', 'senha']
+        });
+
+        console.log('2. Objeto de usuário retornado do banco de dados:', user);
+        
+        // 2. Verifica se o usuário foi encontrado e se a senha existe no objeto
+        if (!user || !user.senha) {
+            console.log('3. Falha: Usuário não encontrado ou senha não retornada.');
+            return res.status(401).json({ message: 'Email ou senha incorretos.' });
+        }
+
+        // 3. Compara a senha fornecida com a senha criptografada
+        const isMatch = await bcrypt.compare(senha, user.senha);
+        console.log('4. Resultado da comparação de senhas (isMatch):', isMatch);
+
+        if (!isMatch) {
+            console.log('5. Falha: A senha não corresponde.');
+            return res.status(401).json({ message: 'Email ou senha incorretos.' });
+        }
+
+        // 4. Se as verificações passarem, gera um token JWT
+        const token = jwt.sign(
+            { id: user.id, role: user.role, schoolId: user.schoolId },
+            'segredo123',
+            { expiresIn: '1h' }
+        );
+
+        // 5. Retorna a resposta de sucesso com o token
+        res.status(200).json({
+            message: 'Login realizado com sucesso.',
+            user: {
+                id: user.id,
+                nome: user.nome,
+                email: user.email,
+                role: user.role,
+                schoolId: user.schoolId,
+            },
+            token,
+        });
+
+    } catch (error) {
+        console.error('Erro no login do usuário:', error);
+        res.status(500).json({ message: 'Erro no servidor.' });
+    }
+};

@@ -27,6 +27,13 @@ Um sistema de gerenciamento de chamados construído com React no frontend e Node
 ### Frontend
 - **Nome 2** — nome2@aluno.univesp.br
 
+### Full Stack
+- ** Elias Isac ** — 23201771@aluno.univesp.br
+
+
+---
+
+
 ### Documentação
 - **Nome 3** — nome3@aluno.univesp.br
 

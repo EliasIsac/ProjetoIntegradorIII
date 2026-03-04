@@ -28,7 +28,8 @@ router.post('/import-kmz', authMiddleware, adminMiddleware, upload.single('file'
 // Rota para obter uma escola por ID (Apenas Admin)
 router.get('/:id', authMiddleware, adminMiddleware, schoolController.getSchoolById);
 
-// Rota para atualizar uma escola (Apenas Admin)
+// Rota para atualizar uma escola 
+// (Apenas Admin)
 router.put('/:id', authMiddleware, adminMiddleware, schoolController.updateSchool);
 
 // Rota para deletar uma escola (Apenas Admin)

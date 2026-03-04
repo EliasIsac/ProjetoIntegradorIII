@@ -1,0 +1,13 @@
+executar_teste:
+  before_script:
+      -echo "Iniciando pipeline..."
+  script:
+    - echo "Executando testes..."
+  after_script:
+    - echo "Pipeline finalizado." 
+criar imagens:
+  script:
+    -echo "Criando imagens..." 
+push imagens:
+  script:
+    -echo "Fazendo push das imagens..."

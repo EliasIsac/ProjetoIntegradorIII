@@ -4,15 +4,30 @@ workflow:
       when: never
     - when: always
 
+image: node.19.1
+
+stage:
+  - teste
+  - build
+  - deploy
 
 
 executar_teste:
+  stage: test
   before_script:
     - echo "Iniciando pipeline"
   script:
     - echo "Executando testes..."
   after_script:
    - echo "Pipeline Finalizado"
+
+executar_teste2:
+  script:
+    - echo "Executando testes2..."
+    - npm version
+
+
+
 criar image:
   script:
     - echo "Criando imagens"

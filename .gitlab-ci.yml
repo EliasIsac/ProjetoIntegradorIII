@@ -1,13 +1,21 @@
+workflow:
+  rules:
+    - if: $CI_COMMIT_BRANCH !== "main"
+      when: never
+    - when: always
+
+
+
 executar_teste:
   before_script:
-      -echo "Iniciando pipeline..."
+    - echo "Iniciando pipeline"
   script:
     - echo "Executando testes..."
   after_script:
-    - echo "Pipeline finalizado." 
-criar imagens:
+   - echo "Pipeline Finalizado"
+criar image:
   script:
-    -echo "Criando imagens..." 
-push imagens:
+    - echo "Criando imagens"
+push image:
   script:
-    -echo "Fazendo push das imagens..."
+    - echo "Fazendo push das imagens"

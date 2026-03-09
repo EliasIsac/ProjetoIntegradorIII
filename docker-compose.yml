@@ -1,0 +1,42 @@
+services:
+  database:
+    image: postgres:15
+    container_name: univesp-db
+    environment:
+      POSTGRES_USER: univesp_pi3
+      POSTGRES_PASSWORD: univesppi3
+      POSTGRES_DB: help_desk
+    ports:
+      - "5432:5432"
+
+  api:
+    build: ./server
+    container_name: univesp-api
+    restart: always  
+    ports:
+      - "5000:5000"
+    volumes:
+      - ./server:/app
+      - /app/node_modules
+    depends_on:
+      - database
+    environment: 
+      DB_HOST: database
+      DB_USER: univesp_pi3
+      DB_PASSWORD: univesppi3
+      DB_NAME: help_desk
+      DB_PORT: 5432
+      DB_DIALECT: postgres
+      NODE_ENV: development
+      PORT: 5000    
+
+  web:
+    build: .
+    container_name: univesp-frontend
+    ports:
+      - "5173:5173"
+    volumes:
+      - .:/app
+      - /app/node_modules
+    depends_on:
+      - api

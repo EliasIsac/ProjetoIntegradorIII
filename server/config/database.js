@@ -15,8 +15,7 @@ const sequelize = new Sequelize(
         // Configurações adicionais da conexão
         host: process.env.DB_HOST,        // O host onde o banco de dados está rodando
         port: process.env.DB_PORT,        // A porta do banco de dados
-        dialect: process.env.DB_DIALECT,  // O dialeto do banco de dados (ex: 'mysql', 'postgres', 'sqlite')
-        
+        dialect: process.env.DB_DIALECT || 'postgres',        
         // Desativa a exibição dos logs SQL gerados pelo Sequelize no console.
         // Útil para não poluir o console em ambiente de produção ou durante testes.
         logging: false, 

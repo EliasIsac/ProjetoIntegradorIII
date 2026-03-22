@@ -70,14 +70,17 @@ sequelize.sync({ alter: true })
     });
     criarAdminSeNaoExistir();
   })
-  .catch(err => {
-    console.error('Erro ao conectar ou sincronizar o banco de dados:', err);
-    if (err.name === 'SequelizeConnectionRefusedError') {
-      console.error('\n❌ ERRO CRÍTICO: Não foi possível conectar ao PostgreSQL (127.0.0.1:5432).');
-      console.error('   -> Verifique se o serviço do PostgreSQL está rodando.');
-      console.error('   -> No Windows: Abra "services.msc", procure por "postgresql" e clique em "Iniciar".\n');
+.catch(err => {
+    if (err.name === 'SequelizeConnectionRefusedError' || err.name === 'SequelizeConnectionError') {
+      console.error('⏳ Banco de dados ainda não está pronto. Tentando novamente em 5 segundos...');
+      
+      // Em vez de fechar o servidor, realiza uma nova tentativa de subir a API
+      setTimeout(() => {
+        
+        process.exit(1); 
+      }, 5000);
     } else {
-      console.error('Erro ao conectar ou sincronizar o banco de dados:', err);
+      console.error('❌ Erro inesperado ao sincronizar banco:', err);
+      process.exit(1);
     }
-    process.exit(1);
   });

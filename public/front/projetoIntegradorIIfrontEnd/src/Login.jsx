@@ -1,4 +1,5 @@
 // src/Login.jsx
+import './Login.css';
 import React, { useState } from 'react';
 import { useNavigate } from 'react-router-dom';
 import logo from './assets/LogodaEmpresa.png';
@@ -129,7 +130,7 @@ function Login() {
     };
 
     return (
-        <Container fluid className="d-flex justify-content-center align-items-center width:839 height:528 position-relative">
+        <Container fluid className="d-flex justify-content-center align-items-center vh-100">
             <Row className="login-box shadow-lg">
                 <Col className="bg-white p-4 rounded-start d-flex flex-column justify-content-center align-items-center text-center">
                     {isRegistering ? (

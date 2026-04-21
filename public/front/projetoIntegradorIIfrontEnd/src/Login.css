@@ -1,0 +1,70 @@
+/* FUNDO DA PÁGINA */
+body {
+  background: #f4f6f9;
+  font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+}
+
+/* CAIXA PRINCIPAL */
+.login-box {
+    display: flex;
+    background: white;
+    border-radius: 20px;
+    overflow: hidden;
+    box-shadow: 0 10px 25px rgba(0,0,0,0.1);
+    min-width: 800px; /* Largura mínima para não quebrar o design */
+}
+
+/* LADO DIREITO (AZUL) */
+.login-info-col {
+  background: linear-gradient(135deg, #1e6fe8, #0d47a1);
+  color: white;
+  border-top-right-radius: 20px;
+  border-bottom-right-radius: 20px;
+  min-height: 500px;
+}
+
+/* INPUTS BONITOS */
+.form-control {
+  border-radius: 10px;
+  padding: 10px;
+  border: 1px solid #ccc;
+  transition: 0.2s;
+}
+
+.form-control:focus {
+  border-color: #1e6fe8;
+  box-shadow: 0 0 0 2px rgba(30, 111, 232, 0.2);
+}
+
+/* BOTÃO PRINCIPAL */
+.btn-primary {
+  background-color: #1e6fe8;
+  border: none;
+  border-radius: 10px;
+  padding: 10px;
+  font-weight: 500;
+  transition: 0.2s;
+}
+
+.btn-primary:hover {
+  background-color: #155ac4;
+}
+
+/* BOTÃO CADASTRO */
+.btn-light {
+  border-radius: 10px;
+  font-weight: 500;
+}
+
+/* TEXTO DIREITA */
+.login-info-col p {
+  font-size: 14px;
+  opacity: 0.9;
+}
+
+/* RESPONSIVO */
+@media (max-width: 768px) {
+  .login-info-col {
+    display: none;
+  }
+}

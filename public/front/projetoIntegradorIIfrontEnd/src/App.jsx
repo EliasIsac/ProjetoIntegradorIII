@@ -1,9 +1,9 @@
 import React from 'react';
 import { BrowserRouter as Router, Routes, Route } from 'react-router-dom';
-import Login from './Login.jsx'; // Importa o componente de login
-import PainelSolicitacoes from './PainelSolicitacoes.jsx'
-import './App.css'
-import 'bootstrap/dist/css/bootstrap.min.css';
+import 'bootstrap/dist/css/bootstrap.min.css'; 
+import './App.css'; 
+import Login from './Login.jsx'; 
+import PainelSolicitacoes from './PainelSolicitacoes.jsx';
 
 function App() {
   return (

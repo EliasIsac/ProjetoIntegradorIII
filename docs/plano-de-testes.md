@@ -20,3 +20,8 @@ Os requisitos mapeados (Abertura, Acompanhamento e Autenticação) foram confron
 * Correção de bugs identificados nos filtros de busca por escola.
 
 **Responsável QA:** Renan Barcelos
+### ✅ Módulos e Fluxos Validados:
+* **Autenticação e Roteamento:** Fluxo de login testado. Redirecionamento da opção "Criar novo cadastro" apontando corretamente para o formulário de cadastro de Escolas.
+* **Dashboard de Análise de Dados:** Consistência visual aprovada. Gráficos, métricas e *hover effects* responsivos e alinhados aos requisitos do projeto.
+* **Controle de Acesso (Perfil):** Validação da visualização exclusiva para o perfil "Admin", com fluxo de *logout* operando corretamente.
+* **Navegação Interna:** Abas operacionais (Escolas, Chamados e Histórico) com usabilidade e transição de telas 100% funcionais no protótipo.

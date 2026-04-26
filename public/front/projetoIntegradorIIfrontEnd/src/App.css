@@ -141,3 +141,49 @@ login-box {
         16px   /* Canto inferior direito */
         110px; /* Canto inferior esquerdo */
 }
+
+/* --- Layout com Sidebar Responsiva --- */
+.app-container {
+    display: flex;
+    min-height: 100vh;
+    width: 100%;
+    overflow-x: hidden;
+}
+
+.sidebar {
+    background-color: #212529; /* Cor escura padrão Bootstrap */
+    color: white;
+    transition: all 0.3s ease;
+    overflow: hidden;
+    display: flex;
+    flex-direction: column;
+    z-index: 1000;
+    flex-shrink: 0; /* Impede que o menu seja esmagado */
+}
+
+/* Largura quando aberto */
+.sidebar.open {
+    width: 250px;
+}
+
+/* Largura quando fechado (apenas ícones ou escondido) */
+.sidebar.closed {
+    width: 0px;
+}
+
+.main-content {
+    flex-grow: 1;
+    transition: all 0.3s ease;
+    background-color: #f8f9fa;
+    width: 100%;
+    min-width: 0; /* Importante para evitar que tabelas quebrem o layout flex */
+    overflow-y: auto; /* Permite scroll apenas no conteúdo se necessário */
+}
+
+/* Ajuste para telas pequenas */
+@media (max-width: 768px) {
+    /* Removido position: absolute para que o menu empurre o conteúdo */
+    .sidebar.open {
+        width: 200px; /* Reduzido um pouco no mobile para sobrar espaço */
+    }
+}

@@ -9,15 +9,12 @@ body {
 }
 
 .sidebar {
-    position: fixed;
-    top: 0;
-    left: 0;
-    height: 100vh;
     width: 250px; 
     background: #1f2937;
     color: #fff;
     padding: 20px;
     transition: width 0.3s ease, padding 0.3s ease;
+    flex-shrink: 0;
 }
 
 .sidebar h2 {
@@ -53,13 +50,15 @@ body {
 
 /* Ajuste do conteúdo para a sidebar colapsar normal (deu trabalho hein kkk) */
 .content {
+    flex-grow: 1;
     padding: 20px;
-    margin-left: 250px; /* alinhado à sidebar normal */
+    transition: all 0.3s ease;
+    min-width: 0;
 }
 
 /* Quando a sidebar estiver colapsada */
 .content.expanded {
-    margin-left: 70px; 
+    /* O Flexbox cuidará disso automaticamente se a sidebar diminuir de largura */
 }
 
 table {

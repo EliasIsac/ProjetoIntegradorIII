@@ -107,6 +107,7 @@ const SolicitacoesPendentes = () => {
     const [solicitacoes, setSolicitacoes] = useState([]); 
     const [loading, setLoading] = useState(true);
     const [error, setError] = useState(null);
+    const [isSidebarOpen, setIsSidebarOpen] = useState(true); // Estado do Drawer
 
     const endpoint = 'tickets'; 
     const title = 'Solicitações Pendentes'; 
@@ -195,17 +196,35 @@ const SolicitacoesPendentes = () => {
 
 
     return (
-        // 💡 Ajuste: Removi o padding, pois o container principal deve ser responsável por isso.
-        // O Container deve ter o `className="p-4 shadow-sm bg-white"` se for a área central da Imagem 2
-        // Assumindo que este componente é o *conteúdo principal* dentro de um layout maior:
-        // O p-4 está definindo o espaçamento do conteúdo em relação à barra lateral
-        <div className="p-4" style={{ backgroundColor: '#f8f9fa', minHeight: '100vh' }}>
-            
-            {/* 💡 Linha de Título, Filtros e Ícone de Configurações - JÁ AJUSTADA NA ÚLTIMA VERSÃO */}
-            <div className="d-flex justify-content-between align-items-center mb-4">
-                {/* ... (Conteúdo de Título e Filtros) ... */}
+        <div className="app-container">
+            {/* Sidebar (Drawer) */}
+            <div className={`sidebar ${isSidebarOpen ? 'open' : 'closed'}`}>
+                <div className="p-3">
+                    <h4 className="text-center">Menu</h4>
+                    {/* Adicione seus links de navegação aqui */}
+                    <nav className="nav flex-column mt-4">
+                        <a className="nav-link text-white" href="#"><i className="bi bi-speedometer2 me-2"></i> Dashboard</a>
+                        <a className="nav-link text-white" href="#"><i className="bi bi-ticket-perforated me-2"></i> Chamados</a>
+                    </nav>
+                </div>
             </div>
-            
+
+            {/* Conteúdo Principal */}
+            <div className="main-content p-4">
+                
+                {/* Botão para abrir/fechar o Drawer */}
+                <Button 
+                    variant="outline-dark" 
+                    onClick={() => setIsSidebarOpen(!isSidebarOpen)}
+                    className="mb-4"
+                >
+                    <i className={`bi ${isSidebarOpen ? 'bi-x-lg' : 'bi-list'}`}></i>
+                </Button>
+
+                <div className="d-flex justify-content-between align-items-center mb-4">
+                    <h2>{title}</h2>
+                </div>
+
             {/* --- Novo Container de Conteúdo Principal (Onde a Tabela Fica) --- */}
             {/* 💡 Adicionado fundo branco e sombra para replicar o design da Imagem 2 */}
             <div className="shadow-sm p-4 bg-white rounded"> 
@@ -246,6 +265,7 @@ const SolicitacoesPendentes = () => {
                     <Alert variant="info">Nenhuma solicitação pendente encontrada.</Alert>
                 )}
             </div> {/* Fim do div de Conteúdo Principal (Sombra Branca) */}
+            </div>
         </div>
     );
 };

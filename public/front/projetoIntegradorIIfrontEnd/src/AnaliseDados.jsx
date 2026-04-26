@@ -1,87 +1,116 @@
-import React from 'react';
+import React, { useState, useEffect, useMemo } from 'react';
+import { Spinner, Alert } from 'react-bootstrap';
 
 export default function AnaliseDados({ userRole }) {
-  // Dados mockados para Problemas Recorrentes
-  const mockRecurringIssues = [
-    { problema: 'Lentidão na Rede Wi-Fi', ocorrencias: 45, acao: 'Treinamento urgente necessário' },
-    { problema: 'Atualização de SO Windows', ocorrencias: 28, acao: 'Revisar equipamentos/processos' },
-    { problema: 'Impressora Offline', ocorrencias: 12, acao: 'Monitorar' },
-    { problema: 'Falha no Login de Alunos', ocorrencias: 35, acao: 'Verificar servidor de autenticação' },
-    { problema: 'Software Educacional Travando', ocorrencias: 22, acao: 'Atualizar software ou drivers' },
-    { problema: 'Projetor Não Liga', ocorrencias: 8, acao: 'Verificar cabos e fonte de energia' },
-    { problema: 'Problemas com Áudio em Salas', ocorrencias: 18, acao: 'Checar configurações de som' },
-    { problema: 'Teclado/Mouse Não Responde', ocorrencias: 5, acao: 'Substituir periféricos' },
-    { problema: 'Backup de Dados Falhando', ocorrencias: 31, acao: 'Revisar rotina de backup e armazenamento' },
-    { problema: 'Acesso a Pastas Compartilhadas', ocorrencias: 15, acao: 'Verificar permissões de rede' },
-  ];
+    const [tickets, setTickets] = useState([]);
+    const [loading, setLoading] = useState(true);
+    const [error, setError] = useState(null);
 
-  // Restrição de Segurança: Apenas Admin acessa esta lógica
-  if (!userRole || userRole.toLowerCase() !== 'admin') {
-    return (
-      <div className="alert alert-danger m-5">
-        Acesso negado. Esta área é restrita a administradores.
-      </div>
-    );
-  }
+    // 1. Busca os dados reais do banco de dados
+    useEffect(() => {
+        const fetchData = async () => {
+            setLoading(true);
+            const token = localStorage.getItem('token');
+            try {
+                const response = await fetch('http://localhost:5000/api/tickets', {
+                    headers: { 'Authorization': `Bearer ${token}` }
+                });
+                if (!response.ok) throw new Error('Erro ao buscar dados do banco');
+                const result = await response.json();
+                // Ajusta conforme a estrutura que sua API retorna
+                setTickets(Array.isArray(result) ? result : result.tickets || []);
+            } catch (err) {
+                setError(err.message);
+            } finally {
+                setLoading(false);
+            }
+        };
+        fetchData();
+    }, []);
+
+    // 2. Lógica para processar os "Problemas Recorrentes" (agrupando por título)
+    const recurringIssues = useMemo(() => {
+        const counts = {};
+        tickets.forEach(ticket => {
+            const titulo = ticket.titulo || 'Sem Título';
+            counts[titulo] = (counts[titulo] || 0) + 1;
+        });
+
+        return Object.entries(counts)
+            .map(([problema, ocorrencias]) => ({ problema, ocorrencias }))
+            .sort((a, b) => b.ocorrencias - a.ocorrencias)
+            .slice(0, 10); // Top 10 conforme solicitado
+    }, [tickets]);
+
+    if (loading) return <div className="text-center m-5"><Spinner animation="border" variant="primary" /></div>;
+    if (error) return <Alert variant="danger" className="m-5">Erro: {error}</Alert>;
+
+    // Mapeia userRole para userType para compatibilidade com seu código do Figma
+    const userType = userRole?.toLowerCase();
 
   return (
-    <div className="container-fluid p-4">
-      <h1 className="display-5 fw-bold text-dark mb-4">Análise de Dados e Tendências</h1>
-      <p className="text-muted mb-5">Visão estratégica e identificação de padrões de chamados</p>
-
-      {/* Problemas Recorrentes */}
-      <div className="card shadow-sm border-0 p-4 mb-5">
-        <h3 className="h5 fw-bold text-dark mb-4">Problemas Recorrentes</h3>
-        <p className="text-muted mb-4">
-          {userRole === 'admin'
+    <div className="container-fluid p-4 bg-white min-vh-100">
+        <h3 className="text-xl font-bold text-[#212529] mb-4">Problemas Recorrentes</h3>
+        <p className="text-sm text-[#6c757d] mb-4">
+            {userType === 'admin' 
             ? 'Top 10 combinações Escola + Categoria com mais ocorrências'
-            : `Problemas mais frequentes na sua escola` // Adaptei para o contexto do userRole
-          }
+            : `Problemas mais frequentes identificados`
+            }
         </p>
-        <div className="table-responsive">
-          <table className="table table-hover align-middle">
-            <thead className="table-light">
-              <tr>
-                <th className="px-4 py-3 text-start text-dark">#</th>
-                <th className="px-4 py-3 text-start text-dark">Problema</th>
-                <th className="px-4 py-3 text-start text-dark">Ocorrências</th>
-                <th className="px-4 py-3 text-start text-dark">Ação Recomendada</th>
-              </tr>
+        
+        <div className="overflow-x-auto">
+            <table className="table w-full">
+            <thead className="bg-[#f8f9fa] border-b-2 border-[#dee2e6]">
+                <tr>
+                <th className="px-4 py-3 text-left font-bold text-[14px] text-[#212529]">#</th>
+                <th className="px-4 py-3 text-left font-bold text-[14px] text-[#212529]">Problema</th>
+                <th className="px-4 py-3 text-left font-bold text-[14px] text-[#212529]">Ocorrências</th>
+                <th className="px-4 py-3 text-left font-bold text-[14px] text-[#212529]">Ação Recomendada</th>
+                </tr>
             </thead>
             <tbody>
-              {mockRecurringIssues.map((issue, index) => (
-                <tr key={index} className="border-bottom">
-                  <td className="px-4 py-3 text-dark">{index + 1}</td>
-                  <td className="px-4 py-3 text-dark">{issue.problema}</td>
-                  <td className="px-4 py-3">
-                    <span className={`badge rounded-pill px-2 py-1 ${
-                      issue.ocorrencias > 30 ? 'bg-danger' :
-                      issue.ocorrencias > 20 ? 'bg-warning text-dark' :
-                      'bg-success'
+                {recurringIssues.map((issue, index) => (
+                <tr key={index} className="border-b border-[#dee2e6]">
+                    <td className="px-4 py-3 text-[14px] text-[#212529]">
+                    {index + 1}
+                    </td>
+                    <td className="px-4 py-3 text-[14px] text-[#212529]">
+                    {issue.problema}
+                    </td>
+                    <td className="px-4 py-3">
+                    <span className={`px-2 py-1 rounded text-[12px] font-semibold ${
+                        issue.ocorrencias > 30 ? 'bg-danger text-white' :
+                        issue.ocorrencias > 20 ? 'bg-warning text-dark' :
+                        'bg-success text-white'
                     }`}>
-                      {issue.ocorrencias} vezes
+                        {issue.ocorrencias} vezes
                     </span>
-                  </td>
-                  <td className="px-4 py-3 text-muted">
+                    </td>
+                    <td className="px-4 py-3 text-[14px] text-[#6c757d]">
                     {issue.ocorrencias > 30 ? 'Treinamento urgente necessário' :
-                     issue.ocorrencias > 20 ? 'Revisar equipamentos/processos' :
-                     'Monitorar'}
-                  </td>
+                        issue.ocorrencias > 20 ? 'Revisar equipamentos/processos' :
+                        'Monitorar'}
+                    </td>
                 </tr>
-              ))}
+                ))}
             </tbody>
-          </table>
+            </table>
         </div>
-        <div className="mt-4 p-4 bg-info-subtle border border-info-subtle rounded text-info-emphasis">
-          <h4 className="h6 fw-bold mb-2">💡 Recomendações Estratégicas:</h4>
-          <ul className="small mb-0 list-unstyled"> {/* Usando list-unstyled para remover bullets padrão */}
-            <li>Considere treinamento preventivo nas escolas com mais ocorrências</li>
-            <li>Avalie a necessidade de upgrade de equipamentos nas categorias críticas</li>
-            <li>Implemente documentação de soluções para problemas recorrentes</li>
-            <li>Crie FAQ baseado nos problemas mais comuns identificados</li>
-          </ul>
+
+        <div className="mt-6 p-4 bg-[#d1ecf1] border border-[#bee5eb] rounded">
+            <h4 className="font-bold text-[#0c5460] mb-2">💡 Recomendações Estratégicas:</h4>
+            <ul className="text-sm text-[#0c5460] space-y-1">
+            {userType === 'admin' ? (
+                <>
+                    <li>Considere treinamento preventivo nas unidades com maior volume de chamados.</li>
+                    <li>Verifique o ciclo de vida dos equipamentos relacionados aos problemas do Top 3.</li>
+                    <li>Avalie a padronização de softwares para reduzir erros de compatibilidade.</li>
+                </>
+            ) : (
+                <li>Monitore a frequência destes eventos para reportar ao suporte central.</li>
+            )}
+            </ul>
         </div>
-      </div>
     </div>
   );
 }

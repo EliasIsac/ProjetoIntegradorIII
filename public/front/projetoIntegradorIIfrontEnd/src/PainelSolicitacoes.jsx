@@ -9,6 +9,9 @@ import PainelCliente from './PainelCliente';
 import PainelTecnico from './PainelTecnico';
 import PainelAdmin from './PainelAdmin'; 
 import PainelEscolas from './PainelEscolas'; 
+import AnaliseDados from './AnaliseDados.jsx';
+
+
 
 function PainelSolicitacoes() {
     const navigate = useNavigate();
@@ -55,6 +58,7 @@ function PainelSolicitacoes() {
         switch (userRole) {
             case 'admin':
                 if (currentView === 'tickets') return <PainelAdmin view="tickets" />;
+                if (currentView === 'analiseDados') return <AnaliseDados userRole={userRole} />;
                 if (currentView === 'gerenciarUsuarios') return <PainelAdmin view="users" />;
                 if (currentView === 'gerenciarEquipamentos') return <PainelAdmin view="equipments" />;
                 if (currentView === 'gerenciarEscolas') return <PainelAdmin view="gerenciarEscolas" />;
@@ -86,6 +90,9 @@ function PainelSolicitacoes() {
                 <>
                     <a href="#" onClick={() => setCurrentView('tickets')} className={currentView === 'tickets' ? 'active' : ''}>
                         <i className="bi bi-bar-chart-line"></i> <span>Visão Geral de Chamados</span>
+                    </a>
+                    <a href="#" onClick={() => setCurrentView('analiseDados')} className={currentView === 'analiseDados' ? 'active' : ''}>
+                        <i className="bi bi-graph-up-arrow"></i> <span>Análise de Dados</span>
                     </a>
                     <a href="#" onClick={() => setCurrentView('gerenciarUsuarios')} className={currentView === 'gerenciarUsuarios' ? 'active' : ''}>
                         <i className="bi bi-people"></i> <span>Gerenciar Usuários</span>

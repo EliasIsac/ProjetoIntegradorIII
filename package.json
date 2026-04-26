@@ -3,15 +3,14 @@
     "-": "^0.0.1",
     "http": "^0.0.1-security",
     "jszip": "^3.10.1",
+    "lucide-react": "^1.11.0",
     "multer": "^2.0.2",
+    "recharts": "^3.8.1",
     "server": "^0.0.3",
     "xml2js": "^0.6.2"
   },
-
   "scripts": {
     "dev": "npx serve -s . -p 5173",
     "start": "npx serve -s . -p 5173"
   }
 }
-
-

@@ -1,180 +1,152 @@
-// src/FormularioNovoChamado.jsx
-
+// src/assets/components/FormularioNovoChamado.jsx
 import React, { useState, useEffect } from 'react';
-import { Modal, Button, Form, Alert } from 'react-bootstrap';
+import { Modal, Form, Button, Row, Col } from 'react-bootstrap';
+import 'bootstrap-icons/font/bootstrap-icons.css';
+import './assets/components/usuario.css';
 
-import { jwtDecode } from 'jwt-decode'; // Pega a função principal 'jwtDecode'
-
-const API_BASE = 'http://localhost:5000/api';
-
-const FormularioNovoChamado = ({ show, handleClose, onTicketCreated }) => {
-    const [formData, setFormData] = useState({
+const FormularioNovoChamado = ({ show, handleClose }) => {
+    const [equipamentos, setEquipamentos] = useState([]);
+    const [novoChamado, setNovoChamado] = useState({
         titulo: '',
         descricao: '',
-        prioridade: 'media',
-        equipmentId: ''
+        prioridade: '',
+        equipmentId: '',
+        cidade: '', // Novo campo para a cidade
     });
-    const [equipments, setEquipments] = useState([]);
-    const [loading, setLoading] = useState(false);
-    const [error, setError] = useState(null);
-    const [userSchoolId, setUserSchoolId] = useState(null);
 
     useEffect(() => {
-        if (!show) return;
+        const fetchEquipamentos = async () => {
+            const token = localStorage.getItem('token');
+            if (!token) return;
 
-        const token = localStorage.getItem('token');
-        if (token) {
             try {
-                const decoded = jwt_decode(token);
-                setUserSchoolId(decoded.schoolId);
-            } catch (e) {
-                console.error("Erro ao decodificar token:", e);
-                return;
-            }
-        }
-        
-        const fetchEquipments = async () => {
-            setLoading(true);
-            try {
-                const response = await fetch(`${API_BASE}/equipments`, {
+                const response = await fetch('http://localhost:5000/api/equipamentos', {
                     headers: { 'Authorization': `Bearer ${token}` }
                 });
-                
-                if (!response.ok) throw new Error('Falha ao carregar equipamentos.');
-                
+                if (!response.ok) {
+                    throw new Error('Erro ao buscar equipamentos');
+                }
                 const data = await response.json();
-                
-                const filteredEquipments = data.filter(eq => eq.schoolId === userSchoolId);
-                
-                setEquipments(filteredEquipments);
-            } catch (err) {
-                setError('Não foi possível carregar a lista de equipamentos.');
-            } finally {
-                setLoading(false);
+                setEquipamentos(data.equipamentos);
+            } catch (error) {
+                console.error("Erro ao buscar equipamentos:", error);
             }
         };
 
-        if (userSchoolId) {
-             fetchEquipments();
+        if (show) {
+            fetchEquipamentos();
         }
-    }, [show, userSchoolId]);
+    }, [show]);
 
     const handleChange = (e) => {
         const { name, value } = e.target;
-        setFormData(prev => ({ ...prev, [name]: value }));
+        setNovoChamado(prevState => ({
+            ...prevState,
+            [name]: value
+        }));
     };
 
     const handleSubmit = async (e) => {
         e.preventDefault();
-        setLoading(true);
-        setError(null);
-        const token = localStorage.getItem('token');
+        // Lógica para enviar os dados para a API
+        console.log("Novo chamado enviado:", novoChamado);
 
+        const token = localStorage.getItem('token');
         try {
-            const payload = {
-                titulo: formData.titulo,
-                descricao: formData.descricao,
-                prioridade: formData.prioridade,
-                equipmentId: formData.equipmentId || null
-            };
-            
-            const response = await fetch(`${API_BASE}/tickets`, {
+            const response = await fetch('http://localhost:5000/api/tickets', {
                 method: 'POST',
-                headers: { 
+                headers: {
                     'Content-Type': 'application/json',
-                    'Authorization': `Bearer ${token}` 
+                    'Authorization': `Bearer ${token}`
                 },
-                body: JSON.stringify(payload)
+                body: JSON.stringify(novoChamado)
             });
 
             if (!response.ok) {
                 const errorData = await response.json();
-                throw new Error(errorData.message || 'Erro ao criar chamado.');
+                throw new Error(errorData.message || 'Erro ao criar chamado');
             }
 
-            onTicketCreated();
-            setFormData({ titulo: '', descricao: '', prioridade: 'media', equipmentId: '' });
-            handleClose();
-            
-        } catch (err) {
-            setError(err.message);
-        } finally {
-            setLoading(false);
+            // Chamado criado com sucesso
+            handleClose(); // Fecha o modal
+            alert('Chamado criado com sucesso!');
+            window.location.reload(); // Recarrega a página para atualizar a lista de chamados
+        } catch (error) {
+            console.error("Erro:", error.message);
+            alert(`Erro ao criar chamado: ${error.message}`);
         }
     };
 
     return (
-        <Modal show={show} onHide={handleClose}>
+        <Modal show={show} onHide={handleClose} size="lg" dialogClassName="modal-right">
             <Modal.Header closeButton>
-                <Modal.Title>Abrir Novo Chamado</Modal.Title>
+                <div className="d-flex align-items-center">
+                    <img src="/LogodaEmpresa.png" alt="Logo" style={{ width: '136px', height: '125px' }} className="me-2" />
+                    <h5 className="mb-0 ms-2">Abrir Novo Chamado</h5>
+                </div>
             </Modal.Header>
-            <Form onSubmit={handleSubmit}>
-                <Modal.Body>
-                    {error && <Alert variant="danger">{error}</Alert>}
-                    
+            <Modal.Body>
+                <Form onSubmit={handleSubmit}>
                     <Form.Group className="mb-3">
                         <Form.Label>Título</Form.Label>
-                        <Form.Control 
-                            type="text" 
-                            name="titulo" 
-                            value={formData.titulo} 
-                            onChange={handleChange} 
-                            required 
+                        <Form.Control
+                            type="text"
+                            name="titulo"
+                            value={novoChamado.titulo}
+                            onChange={handleChange}
+                            required
                         />
                     </Form.Group>
-                    
-                    <Form.Group className="mb-3">
-                        <Form.Label>Descrição Detalhada</Form.Label>
-                        <Form.Control 
-                            as="textarea" 
-                            rows={3} 
-                            name="descricao" 
-                            value={formData.descricao} 
-                            onChange={handleChange} 
-                            required 
-                        />
-                    </Form.Group>
-
                     <Form.Group className="mb-3">
                         <Form.Label>Prioridade</Form.Label>
-                        <Form.Select 
-                            name="prioridade" 
-                            value={formData.prioridade} 
+                        <Form.Select
+                            name="prioridade"
+                            value={novoChamado.prioridade}
                             onChange={handleChange}
+                            required
                         >
+                            <option value="">Selecione a Prioridade</option>
                             <option value="baixa">Baixa</option>
                             <option value="media">Média</option>
                             <option value="alta">Alta</option>
                         </Form.Select>
                     </Form.Group>
-
                     <Form.Group className="mb-3">
-                        <Form.Label>Equipamento Relacionado (Opcional)</Form.Label>
-                        <Form.Select 
-                            name="equipmentId" 
-                            value={formData.equipmentId} 
+                        <Form.Label>Cidade</Form.Label>
+                        <Form.Control
+                            type="text"
+                            name="cidade"
+                            value={novoChamado.cidade}
                             onChange={handleChange}
-                            disabled={loading}
-                        >
-                            <option value="">Nenhum Equipamento</option>
-                            {equipments.map(eq => (
-                                <option key={eq.id} value={eq.id}>
-                                    {eq.name} ({eq.model})
-                                </option>
-                            ))}
-                        </Form.Select>
+                            required
+                        />
                     </Form.Group>
-
-                </Modal.Body>
-                <Modal.Footer>
-                    <Button variant="secondary" onClick={handleClose}>
-                        Cancelar
+                    <Form.Group className="mb-3">
+                        <Form.Label>Equipamento (Descrição Opcional)</Form.Label>
+                        <Form.Control
+                            type="text"
+                            name="nomeEquipamento"
+                            value={novoChamado.nomeEquipamento}
+                            onChange={handleChange}
+                            placeholder="Ex: Computador 5, Impressora Epson"
+                        />
+                    </Form.Group>
+                    <Form.Group className="mb-3">
+                        <Form.Label>Descrição Detalhada</Form.Label>
+                        <Form.Control
+                            as="textarea"
+                            rows={5}
+                            name="descricao"
+                            value={novoChamado.descricao}
+                            onChange={handleChange}
+                            required
+                        />
+                    </Form.Group>
+                    <Button variant="primary" type="submit" className="w-100 mt-3">
+                        Enviar Chamado
                     </Button>
-                    <Button variant="primary" type="submit" disabled={loading}>
-                        {loading ? 'Criando...' : 'Abrir Chamado'}
-                    </Button>
-                </Modal.Footer>
-            </Form>
+                </Form>
+            </Modal.Body>
         </Modal>
     );
 };

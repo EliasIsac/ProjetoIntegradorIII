@@ -2,6 +2,7 @@ import React, { useState, useEffect, useMemo } from 'react';
 import { Button, Table, Spinner, Alert, Container, Row, Col, Dropdown } from 'react-bootstrap'; 
 import { format } from 'date-fns';
 import { ptBR } from 'date-fns/locale';
+import AnaliseDados from './AnaliseDados.jsx';
 
 // 💡 IMPORTANTE: Você precisará instalar e importar um conjunto de ícones, como 'react-icons' ou garantir que 'bootstrap-icons' (bi) esteja linkado.
 // Exemplo: import { FaSearch, FaCog, FaPlusCircle } from 'react-icons/fa';
@@ -107,11 +108,26 @@ const SolicitacoesPendentes = () => {
     const [solicitacoes, setSolicitacoes] = useState([]); 
     const [loading, setLoading] = useState(true);
     const [error, setError] = useState(null);
+    const [view, setView] = useState('tickets'); // 'tickets' ou 'analytics'
     const [isSidebarOpen, setIsSidebarOpen] = useState(true); // Estado do Drawer
+    const [userRole, setUserRole] = useState('');
 
     const endpoint = 'tickets'; 
     const title = 'Solicitações Pendentes'; 
-    // 💡 Estado para simular os filtros (necessário para o layout)
+
+    // Decodificar role do token ao carregar
+    useEffect(() => {
+        const token = localStorage.getItem('token');
+        if (token) {
+            try {
+                const base64Url = token.split('.')[1];
+                const base64 = base64Url.replace(/-/g, '+').replace(/_/g, '/');
+                const payload = JSON.parse(window.atob(base64));
+                setUserRole(payload.role || 'client');
+            } catch (e) { console.error("Erro ao decodificar token", e); }
+        }
+    }, []);
+
     const [selectedYear, setSelectedYear] = useState('2025'); 
     const [selectedMonth, setSelectedMonth] = useState('Setembro'); 
 
@@ -200,11 +216,23 @@ const SolicitacoesPendentes = () => {
             {/* Sidebar (Drawer) */}
             <div className={`sidebar ${isSidebarOpen ? 'open' : 'closed'}`}>
                 <div className="p-3">
-                    <h4 className="text-center">Menu</h4>
-                    {/* Adicione seus links de navegação aqui */}
+                    <h4 className="text-center mb-4">SupDesk</h4>
                     <nav className="nav flex-column mt-4">
-                        <a className="nav-link text-white" href="#"><i className="bi bi-speedometer2 me-2"></i> Dashboard</a>
-                        <a className="nav-link text-white" href="#"><i className="bi bi-ticket-perforated me-2"></i> Chamados</a>
+                        <button 
+                            className={`nav-link text-white border-0 bg-transparent text-start ${view === 'tickets' ? 'fw-bold text-primary' : ''}`} 
+                            onClick={() => setView('tickets')}
+                        >
+                            <i className="bi bi-ticket-perforated me-2"></i> Chamados
+                        </button>
+
+                        {userRole === 'admin' && (
+                            <button 
+                                className={`nav-link text-white border-0 bg-transparent text-start ${view === 'analytics' ? 'fw-bold text-primary' : ''}`} 
+                                onClick={() => setView('analytics')}
+                            >
+                                <i className="bi bi-bar-chart-line me-2"></i> Análise de Dados
+                            </button>
+                        )}
                     </nav>
                 </div>
             </div>
@@ -221,53 +249,53 @@ const SolicitacoesPendentes = () => {
                     <i className={`bi ${isSidebarOpen ? 'bi-x-lg' : 'bi-list'}`}></i>
                 </Button>
 
-                <div className="d-flex justify-content-between align-items-center mb-4">
-                    <h2>{title}</h2>
-                </div>
-
-            {/* --- Novo Container de Conteúdo Principal (Onde a Tabela Fica) --- */}
-            {/* 💡 Adicionado fundo branco e sombra para replicar o design da Imagem 2 */}
-            <div className="shadow-sm p-4 bg-white rounded"> 
-
-                {/* 💡 ALTERAÇÃO CHAVE AQUI: Adicionado 'flex-wrap' na div que contém os Badges e o Botão */}
-                <div className="d-flex align-items-center mb-4 flex-wrap"> 
-                    {/* Badge Total - Azul */}
-                    <span className="badge bg-primary text-light me-2 py-2 px-3 fw-bold mb-2">
-                        {/* 💡 Aumentei o py-2 e adicionei mb-2 para garantir espaçamento em telas menores */}
-                        {priorityCounts.total} Total de Chamados
-                    </span>
-                    
-                    {/* Badge Baixa - Verde */}
-                    <span className="badge bg-success text-light me-2 py-2 px-3 fw-bold mb-2">
-                        {priorityCounts.baixa} Prioridade Baixa
-                    </span>
-                    
-                    {/* Badge Média - Amarelo/Laranja */}
-                    <span className="badge bg-warning text-dark me-2 py-2 px-3 fw-bold mb-2">
-                        {priorityCounts.media} Prioridade Média
-                    </span>
-                    
-                    {/* Badge Alta - Vermelho */}
-                    <span className="badge bg-danger text-light me-4 py-2 px-3 fw-bold mb-2">
-                        {priorityCounts.alta} Prioridade Alta
-                    </span>
-                    
-                    {/* Botão Abrir Chamado - Azul com Ícone */}
-                    <Button variant="primary" className="mb-2">
-                        <i className="bi bi-plus-circle-fill me-2"></i> Abrir Chamado
-                    </Button>
-                </div>
-            
-                {/* Tabela de Solicitações */}
-                {solicitacoes.length > 0 ? (
-                    <SolicitacoesTable data={solicitacoes} />
+                {view === 'analytics' && AnaliseDados ? (
+                    <AnaliseDados userRole={userRole} />
                 ) : (
-                    <Alert variant="info">Nenhuma solicitação pendente encontrada.</Alert>
+                    <>
+                        <div className="d-flex justify-content-between align-items-center mb-4">
+                            <h2>{title}</h2>
+                        </div>
+
+                        <div className="shadow-sm p-4 bg-white rounded"> 
+                            <div className="d-flex align-items-center mb-4 flex-wrap"> 
+                                {/* Badge Total - Azul */}
+                                <span className="badge bg-primary text-light me-2 py-2 px-3 fw-bold mb-2">
+                                    {priorityCounts.total} Total de Chamados
+                                </span>
+                                
+                                {/* Badge Baixa - Verde */}
+                                <span className="badge bg-success text-light me-2 py-2 px-3 fw-bold mb-2">
+                                    {priorityCounts.baixa} Prioridade Baixa
+                                </span>
+                                
+                                {/* Badge Média - Amarelo/Laranja */}
+                                <span className="badge bg-warning text-dark me-2 py-2 px-3 fw-bold mb-2">
+                                    {priorityCounts.media} Prioridade Média
+                                </span>
+                                
+                                {/* Badge Alta - Vermelho */}
+                                <span className="badge bg-danger text-light me-4 py-2 px-3 fw-bold mb-2">
+                                    {priorityCounts.alta} Prioridade Alta
+                                </span>
+                                
+                                {/* Botão Abrir Chamado - Azul com Ícone */}
+                                <Button variant="primary" className="mb-2">
+                                    <i className="bi bi-plus-circle-fill me-2"></i> Abrir Chamado
+                                </Button>
+                            </div>
+                        
+                            {/* Tabela de Solicitações */}
+                            {solicitacoes.length > 0 ? (
+                                <SolicitacoesTable data={solicitacoes} />
+                            ) : (
+                                <Alert variant="info">Nenhuma solicitação pendente encontrada.</Alert>
+                            )}
+                        </div>
+                    </>
                 )}
-            </div> {/* Fim do div de Conteúdo Principal (Sombra Branca) */}
             </div>
         </div>
-    );
-};
-
+    )
+}
 export default SolicitacoesPendentes;

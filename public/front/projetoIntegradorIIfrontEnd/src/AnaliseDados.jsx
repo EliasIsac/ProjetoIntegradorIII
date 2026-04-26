@@ -33,11 +33,16 @@ export default function AnaliseDados({ userRole }) {
         const counts = {};
         tickets.forEach(ticket => {
             const titulo = ticket.titulo || 'Sem Título';
-            counts[titulo] = (counts[titulo] || 0) + 1;
+            const escola = ticket.School?.nome || 'Não Informada';
+            const key = `${titulo}|${escola}`;
+            
+            if (!counts[key]) {
+                counts[key] = { problema: titulo, escola: escola, ocorrencias: 0 };
+            }
+            counts[key].ocorrencias += 1;
         });
 
-        return Object.entries(counts)
-            .map(([problema, ocorrencias]) => ({ problema, ocorrencias }))
+        return Object.values(counts)
             .sort((a, b) => b.ocorrencias - a.ocorrencias)
             .slice(0, 10); // Top 10 conforme solicitado
     }, [tickets]);
@@ -64,6 +69,7 @@ export default function AnaliseDados({ userRole }) {
                 <tr>
                 <th className="px-4 py-3 text-left font-bold text-[14px] text-[#212529]">#</th>
                 <th className="px-4 py-3 text-left font-bold text-[14px] text-[#212529]">Problema</th>
+                <th className="px-4 py-3 text-left font-bold text-[14px] text-[#212529]">Escola</th>
                 <th className="px-4 py-3 text-left font-bold text-[14px] text-[#212529]">Ocorrências</th>
                 <th className="px-4 py-3 text-left font-bold text-[14px] text-[#212529]">Ação Recomendada</th>
                 </tr>
@@ -76,6 +82,9 @@ export default function AnaliseDados({ userRole }) {
                     </td>
                     <td className="px-4 py-3 text-[14px] text-[#212529]">
                     {issue.problema}
+                    </td>
+                    <td className="px-4 py-3 text-[14px] text-[#212529]">
+                    {issue.escola}
                     </td>
                     <td className="px-4 py-3">
                     <span className={`px-2 py-1 rounded text-[12px] font-semibold ${

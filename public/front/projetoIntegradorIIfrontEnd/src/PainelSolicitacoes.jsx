@@ -133,14 +133,27 @@ function PainelSolicitacoes() {
         </div>
     );
 
+    const getDynamicTitle = () => {
+    switch (currentView) {
+        case 'analiseDados':
+            return 'Análise de Dados e Tendências';
+        case 'gerenciarUsuarios':
+            return 'Gerenciar Usuários';
+        case 'tickets':
+            return 'Painel de Chamados';
+        default:
+            return 'Painel de Chamados';
+    }
+};
+
     return (
         <div className={`painel-container ${isSidebarCollapsed ? 'collapsed' : ''}`}>
             {renderSidebar()}
             {}
             <div className={`main-content ${isSidebarCollapsed ? 'expanded' : ''}`}>
                 <header className="main-header">
-                    <h1>Painel de Chamados</h1>
-                </header>
+    <h1>{getDynamicTitle()}</h1> 
+</header>
                 <main className="main-body">
                     {renderContent()}
                 </main>

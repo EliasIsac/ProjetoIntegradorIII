@@ -1,6 +1,6 @@
 import React, { useState, useEffect, useMemo } from 'react';
 import { Spinner, Alert } from 'react-bootstrap';
-import { LineChart, Line, BarChart, Bar, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer, Legend } from 'recharts'; //importação graficos
+import { LineChart, Line, BarChart, Bar, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer, Legend, Cell } from 'recharts'; //importação graficos
 
 export default function AnaliseDados({ userRole }) {
     const [tickets, setTickets] = useState([]);
@@ -55,6 +55,18 @@ export default function AnaliseDados({ userRole }) {
         })).slice(0, 5);
     }, [tickets]); 
 
+    const dadosPorEscola = useMemo(() => {
+        const unidades = {};
+        tickets.forEach(ticket => {
+            const escola = ticket.School?.nome || 'Não Informada';
+            unidades[escola] = (unidades[escola] || 0) + 1;
+        });
+        return Object.keys(unidades).map(nome => ({
+            name: nome,
+            total: unidades[nome]
+        })).sort((a, b) => b.total - a.total);
+    }, [tickets]);
+
     const recurringIssues = useMemo(() => {
         const counts = {};
         tickets.forEach(ticket => {
@@ -71,6 +83,8 @@ export default function AnaliseDados({ userRole }) {
 
     if (loading) return <div className="text-center m-5"><Spinner animation="border" variant="primary" /></div>;
     if (error) return <Alert variant="danger" className="m-5">Erro: {error}</Alert>;
+
+    const COLORS = ['#0d6efd', '#6610f2', '#6f42c1', '#d63384', '#dc3545', '#fd7e14', '#ffc107', '#198754', '#20c997', '#0dcaf0'];
 
     const userType = userRole?.toLowerCase();
 
@@ -125,6 +139,29 @@ export default function AnaliseDados({ userRole }) {
                                         <Legend iconType="circle" />
                                         <Bar dataKey="atual" fill="#0dfd49" radius={[4, 4, 0, 0]} name="Volume Atual" />
                                         <Bar dataKey="previsto" fill="#dee2e6" radius={[4, 4, 0, 0]} name="Previsão" />
+                                    </BarChart>
+                                </ResponsiveContainer>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                <div className="row mb-5">
+                    <div className="col-12">
+                        <div className="p-3 border rounded bg-white shadow-sm">
+                            <h5 className="font-bold text-gray-700 mb-4">Volume de Chamados por Unidade Escolar</h5>
+                            <div style={{ width: '100%', height: 350 }}>
+                                <ResponsiveContainer>
+                                    <BarChart data={dadosPorEscola} layout="vertical" margin={{ left: 40, right: 40 }}>
+                                        <CartesianGrid strokeDasharray="3 3" horizontal={true} vertical={false} stroke="#eee" />
+                                        <XAxis type="number" fontSize={12} axisLine={false} tickLine={false} hide />
+                                        <YAxis dataKey="name" type="category" fontSize={11} axisLine={false} tickLine={false} width={150} />
+                                        <Tooltip cursor={{fill: 'transparent'}} />
+                                        <Bar dataKey="total" radius={[0, 4, 4, 0]} name="Total de Chamados" barSize={25}>
+                                            {dadosPorEscola.map((entry, index) => (
+                                                <Cell key={`cell-${index}`} fill={COLORS[index % COLORS.length]} />
+                                            ))}
+                                        </Bar>
                                     </BarChart>
                                 </ResponsiveContainer>
                             </div>

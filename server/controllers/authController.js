@@ -2,7 +2,7 @@
 // bcrypt é usado para criptografar senhas
 // jwt é usado para criar tokens de autenticação
 const Usuario = require('../models/Usuario');
-const bcrypt = require('bcryptjs');
+const bcrypt = require('bcrypt');
 const jwt = require('jsonwebtoken');
 
 // Adicione esta chave secreta para assinar os tokens (crie uma complexa e armazene no .env futuramente)
@@ -127,7 +127,7 @@ exports.login = async (req, res) => {
         // 4. Se as verificações passarem, gera um token JWT
         const token = jwt.sign(
             { id: user.id, role: user.role, schoolId: user.schoolId },
-            'segredo123',
+            process.env.JWT_SECRET || 'segredo123',
             { expiresIn: '1h' }
         );
 
